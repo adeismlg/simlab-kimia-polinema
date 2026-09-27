@@ -9,12 +9,20 @@ use Illuminate\Support\Facades\Auth;
 
 class PracticumScheduleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $schedules = PracticumSchedule::with(['dosen', 'instrument', 'bookings'])
-            ->where('tanggal', '>=', now()->subDays(7))
-            ->orderBy('tanggal')
-            ->paginate(15);
+        $query = PracticumSchedule::with(['dosen', 'instrument', 'bookings'])
+            ->where('tanggal', '>=', now()->subDays(7));
+
+        if ($search = $request->get('q')) {
+            $query->where('nama_praktikum', 'like', "%{$search}%");
+        }
+
+        if ($tanggal = $request->get('tanggal')) {
+            $query->whereDate('tanggal', $tanggal);
+        }
+
+        $schedules = $query->orderBy('tanggal')->paginate(15)->withQueryString();
 
         return view('practicum-schedules.index', compact('schedules'));
     }

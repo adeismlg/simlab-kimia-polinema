@@ -1,10 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800">Buat Jadwal Praktikum</h2>
+        <x-page-header title="Buat Jadwal Praktikum" subtitle="Atur sesi praktikum baru untuk mahasiswa" />
     </x-slot>
 
-    <div class="py-8 max-w-2xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white shadow rounded p-6">
+    <div class="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
             <form method="POST" action="{{ route('practicum-schedules.store') }}" class="space-y-5">
                 @csrf
                 <div>
@@ -42,7 +42,7 @@
                     <label class="block text-sm text-gray-700">Catatan</label>
                     <textarea name="catatan" rows="2" class="mt-1 block w-full rounded border-gray-300"></textarea>
                 </div>
-                <button class="bg-indigo-600 text-white px-5 py-2 rounded">Simpan Jadwal</button>
+                <button class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg shadow-sm">Simpan Jadwal</button>
             </form>
         </div>
     </div>

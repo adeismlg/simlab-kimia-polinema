@@ -5,25 +5,42 @@ namespace App\Http\Controllers;
 use App\Models\Parameter;
 use App\Models\Payment;
 use App\Models\Sample;
+use App\Notifications\SampleStatusUpdated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class SampleController extends Controller
 {
     /**
      * Daftar sampel. User biasa lihat miliknya sendiri; laboran/admin lihat semua.
+     * Mendukung pencarian (?q=) dan filter status (?status=).
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+        $isStaff = $user->hasAnyRole(['laboran', 'admin', 'kepala_lab']);
 
-        $samples = $user->hasAnyRole(['laboran', 'admin', 'kepala_lab'])
-            ? Sample::with(['user', 'parameters'])->latest()->paginate(15)
-            : Sample::with('parameters')->where('user_id', $user->id)->latest()->paginate(15);
+        $query = $isStaff
+            ? Sample::with(['user', 'parameters'])
+            : Sample::with('parameters')->where('user_id', $user->id);
 
-        return view('samples.index', compact('samples'));
+        if ($search = $request->get('q')) {
+            $query->where(fn ($q) => $q->where('kode_sampel', 'like', "%{$search}%")
+                ->orWhere('nama_sampel', 'like', "%{$search}%"));
+        }
+
+        if ($status = $request->get('status')) {
+            $query->where('status', $status);
+        }
+
+        $samples = $query->latest()->paginate(15)->withQueryString();
+        $statusOptions = [
+            'diajukan', 'diverifikasi', 'menunggu_pembayaran', 'dibayar',
+            'diproses', 'hasil_terbit', 'selesai', 'ditolak',
+        ];
+
+        return view('samples.index', compact('samples', 'statusOptions', 'isStaff'));
     }
 
     public function create()
@@ -48,7 +65,7 @@ class SampleController extends Controller
 
         $user = Auth::user();
 
-        DB::transaction(function () use ($validated, $request, $user) {
+        $sample = DB::transaction(function () use ($validated, $request, $user) {
             $filePath = $request->hasFile('file_dokumen')
                 ? $request->file('file_dokumen')->store('samples/dokumen', 'public')
                 : null;
@@ -71,7 +88,11 @@ class SampleController extends Controller
                 ];
             }
             $sample->parameters()->sync($syncData);
+
+            return $sample;
         });
+
+        $user->notify(new SampleStatusUpdated($sample));
 
         return redirect()->route('samples.index')
             ->with('success', 'Sampel berhasil didaftarkan dan menunggu verifikasi laboran.');
@@ -109,6 +130,8 @@ class SampleController extends Controller
             'status' => 'menunggu_verifikasi',
         ]);
 
+        $sample->user->notify(new SampleStatusUpdated($sample));
+
         return back()->with('success', 'Sampel diverifikasi. Tagihan pembayaran telah dibuat.');
     }
 
@@ -140,6 +163,8 @@ class SampleController extends Controller
 
         $sample->update(['status' => 'hasil_terbit']);
 
+        $sample->user->notify(new SampleStatusUpdated($sample));
+
         return back()->with('success', 'Hasil uji berhasil diinput, menunggu approval kepala lab.');
     }
 
@@ -157,6 +182,8 @@ class SampleController extends Controller
         ]);
 
         $sample->update(['status' => 'selesai']);
+
+        $sample->user->notify(new SampleStatusUpdated($sample));
 
         return back()->with('success', 'Hasil uji disetujui dan sampel selesai diproses.');
     }

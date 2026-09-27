@@ -27,13 +27,33 @@ class DashboardController extends Controller
                 'booking_praktikum_diajukan' => PracticumBooking::where('status', 'diajukan')->count(),
             ];
 
-            return view('dashboard-staff', compact('data'));
+            $statusChart = Sample::selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
+
+            $recentSamples = Sample::with('user')->latest()->limit(6)->get();
+
+            $calibrationAlerts = Calibration::with('instrument')
+                ->where('tanggal_jatuh_tempo', '<=', now()->addDays(30))
+                ->where('status', '!=', 'selesai')
+                ->orderBy('tanggal_jatuh_tempo')
+                ->limit(5)
+                ->get();
+
+            return view('dashboard-staff', compact('data', 'statusChart', 'recentSamples', 'calibrationAlerts'));
         }
 
         // dashboard untuk mahasiswa/dosen/eksternal
         $samples = Sample::where('user_id', $user->id)->latest()->limit(5)->get();
-        $bookings = PracticumBooking::with('schedule')->where('user_id', $user->id)->latest()->limit(5)->get();
+        $bookings = PracticumBooking::with('schedule')->where('user_id', $user->id)->latest()->limit(4)->get();
 
-        return view('dashboard', compact('samples', 'bookings'));
+        $summary = [
+            'total_sampel' => Sample::where('user_id', $user->id)->count(),
+            'sampel_aktif' => Sample::where('user_id', $user->id)->whereNotIn('status', ['selesai', 'ditolak'])->count(),
+            'sampel_selesai' => Sample::where('user_id', $user->id)->where('status', 'selesai')->count(),
+            'booking_aktif' => PracticumBooking::where('user_id', $user->id)->whereIn('status', ['diajukan', 'disetujui'])->count(),
+        ];
+
+        return view('dashboard', compact('samples', 'bookings', 'summary'));
     }
 }

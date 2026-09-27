@@ -1,10 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800">Daftarkan Sampel Uji</h2>
+        <x-page-header title="Daftarkan Sampel Uji" subtitle="Isi detail sampel dan pilih parameter yang ingin diuji" />
     </x-slot>
 
-    <div class="py-8 max-w-3xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white shadow rounded p-6">
+    <div class="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto">
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
             @if ($errors->any())
                 <div class="mb-4 p-3 bg-red-100 text-red-800 rounded">
                     <ul class="list-disc list-inside text-sm">
@@ -52,7 +52,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg shadow-sm">
                     Daftarkan Sampel
                 </button>
             </form>

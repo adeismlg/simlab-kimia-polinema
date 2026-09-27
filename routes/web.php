@@ -10,18 +10,27 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PracticumBookingController;
 use App\Http\Controllers\PracticumScheduleController;
 use App\Http\Controllers\SampleController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\LandingController;
+/*
+|--------------------------------------------------------------------------
+| Ganti isi routes/web.php project Laravel Anda dengan file ini
+| (gabungkan dengan rute default Breeze: '/', profile, dsb.)
+|--------------------------------------------------------------------------
+*/
 
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
-Route::get('/', fn () => view('welcome'));
+// Webhook Midtrans: HARUS di luar middleware auth & tanpa proteksi CSRF
+// (tambahkan '/midtrans/callback' ke $except di app/Http/Middleware/VerifyCsrfToken.php)
+Route::post('/midtrans/callback', [PaymentController::class, 'midtransCallback'])->name('payments.midtrans-callback');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    
     // Dashboard (menggantikan dashboard default Breeze)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -60,10 +69,20 @@ Route::middleware(['auth'])->group(function () {
 
     // Modul Pembayaran
     Route::get('/payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+    Route::get('/payments/{payment}/snap-token', [PaymentController::class, 'snapToken'])->name('payments.snap-token');
     Route::post('/payments/{payment}/upload-proof', [PaymentController::class, 'uploadProof'])->name('payments.upload-proof');
     Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify'])->name('payments.verify');
     Route::post('/payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject');
+
+    // Modul Laporan / Export Excel
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/samples/export', [ReportController::class, 'exportSamples'])->name('reports.samples.export');
+
+    // Modul Kelola User (khusus admin, di-guard di controller)
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
 require __DIR__.'/auth.php'; // rute bawaan Breeze (login, register, dll)
-

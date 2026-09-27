@@ -8,11 +8,20 @@ use Illuminate\Support\Facades\Auth;
 
 class InstrumentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $instruments = Instrument::with(['calibrations' => fn ($q) => $q->latest('tanggal_kalibrasi')->limit(1)])
-            ->orderBy('nama_alat')
-            ->paginate(15);
+        $query = Instrument::with(['calibrations' => fn ($q) => $q->latest('tanggal_kalibrasi')->limit(1)]);
+
+        if ($search = $request->get('q')) {
+            $query->where(fn ($q) => $q->where('nama_alat', 'like', "%{$search}%")
+                ->orWhere('kode_alat', 'like', "%{$search}%"));
+        }
+
+        if ($status = $request->get('status')) {
+            $query->where('status', $status);
+        }
+
+        $instruments = $query->orderBy('nama_alat')->paginate(15)->withQueryString();
 
         return view('instruments.index', compact('instruments'));
     }

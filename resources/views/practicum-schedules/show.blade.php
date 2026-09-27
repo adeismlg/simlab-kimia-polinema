@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800">{{ $schedule->nama_praktikum }}</h2>
+        <x-page-header :title="$schedule->nama_praktikum" subtitle="Detail jadwal dan daftar peserta" />
     </x-slot>
 
-    <div class="py-8 max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto space-y-6">
         @if (session('success'))
             <div class="p-3 bg-green-100 text-green-800 rounded">{{ session('success') }}</div>
         @endif
 
-        <div class="bg-white shadow rounded p-6">
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
             <dl class="grid grid-cols-2 gap-4 text-sm">
                 <div><dt class="text-gray-500">Tanggal</dt><dd>{{ $schedule->tanggal->format('d-m-Y') }}</dd></div>
                 <div><dt class="text-gray-500">Jam</dt><dd>{{ $schedule->jam_mulai }}–{{ $schedule->jam_selesai }}</dd></div>
@@ -18,7 +18,7 @@
             </dl>
         </div>
 
-        <div class="bg-white shadow rounded p-6">
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
             <h3 class="font-medium mb-3">Peserta</h3>
             <table class="w-full text-sm">
                 <thead class="text-left text-gray-500">
@@ -32,7 +32,7 @@
                     @forelse ($schedule->bookings as $booking)
                         <tr>
                             <td class="py-2">{{ $booking->user->name }}</td>
-                            <td class="py-2">{{ $booking->status }}</td>
+                            <td class="py-2"><x-status-badge :status="$booking->status" /></td>
                             @if (auth()->user()->hasAnyRole(['dosen', 'laboran', 'admin']) && $booking->status === 'diajukan')
                                 <td class="py-2 space-x-2">
                                     <form method="POST" action="{{ route('practicum-bookings.status', [$booking, 'disetujui']) }}" class="inline">
