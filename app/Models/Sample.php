@@ -16,10 +16,12 @@ class Sample extends Model
     protected $fillable = [
         'kode_sampel', 'user_id', 'nama_sampel', 'deskripsi',
         'file_dokumen', 'status', 'verified_by', 'verified_at', 'catatan',
+        'lokasi_penyimpanan', 'label_dicetak_at',
     ];
 
     protected $casts = [
         'verified_at' => 'datetime',
+        'label_dicetak_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

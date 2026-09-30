@@ -13,6 +13,8 @@ use App\Http\Controllers\SampleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LabelController;
+use App\Http\Controllers\SiteSettingController;
 /*
 |--------------------------------------------------------------------------
 | Ganti isi routes/web.php project Laravel Anda dengan file ini
@@ -35,7 +37,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Modul Sampel Uji
-    Route::get('/samples', [SampleController::class, 'index'])->name('samples.index');
+   Route::get('/samples', [SampleController::class, 'index'])->name('samples.index');
     Route::get('/samples/create', [SampleController::class, 'create'])->name('samples.create');
     Route::post('/samples', [SampleController::class, 'store'])->name('samples.store');
     Route::get('/samples/{sample}', [SampleController::class, 'show'])->name('samples.show');
@@ -43,6 +45,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/samples/{sample}/input-hasil', [SampleController::class, 'inputHasil'])->name('samples.input-hasil');
     Route::post('/samples/{sample}/approve-hasil', [SampleController::class, 'approveHasil'])->name('samples.approve-hasil');
     Route::get('/samples/{sample}/sertifikat', [CertificateController::class, 'download'])->name('certificates.download');
+    Route::get('/samples/{sample}/label', [LabelController::class, 'show'])->name('samples.label');
+    Route::post('/samples/labels/cetak-batch', [LabelController::class, 'batch'])->name('samples.label-batch');
 
     // Modul Alat & Kalibrasi
     Route::get('/instruments', [InstrumentController::class, 'index'])->name('instruments.index');
@@ -83,6 +87,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    // Modul Landing Page (khusus admin, di-guard di controller)
+    Route::get('/site-settings', [SiteSettingController::class, 'edit'])->name('site-settings.edit');
+    Route::put('/site-settings', [SiteSettingController::class, 'update'])->name('site-settings.update');
 });
 
 require __DIR__.'/auth.php'; // rute bawaan Breeze (login, register, dll)
